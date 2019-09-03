@@ -18017,9 +18017,11 @@ static void f_termopen(typval_T *argvars, typval_T *rettv, FunPtr fptr)
   Callback on_exit = CALLBACK_NONE;
   dict_T *job_opts = NULL;
   const char *cwd = ".";
+  uint8_t term_curwin = 0;
   if (argvars[1].v_type == VAR_DICT) {
     job_opts = argvars[1].vval.v_dict;
 
+    term_curwin = (uint8_t)tv_dict_get_number(job_opts, "curwin");
     const char *const new_cwd = tv_dict_get_string(job_opts, "cwd", false);
     if (new_cwd && *new_cwd != NUL) {
       cwd = new_cwd;
@@ -18037,10 +18039,18 @@ static void f_termopen(typval_T *argvars, typval_T *rettv, FunPtr fptr)
     }
   }
 
-  uint16_t term_width = MAX(0, curwin->w_width_inner - win_col_off(curwin));
+  uint16_t term_width, term_height;
+  if (term_curwin) {
+     term_width = curwin->w_width;
+     term_height = curwin->w_height;
+  }
+  else {
+    term_width = MAX(0, curwin->w_width_inner - win_col_off(curwin));
+    term_height = (uint16_t)curwin->w_height_inner;
+  }
   Channel *chan = channel_job_start(argv, on_stdout, on_stderr, on_exit,
                                     true, false, false, cwd,
-                                    term_width, curwin->w_height_inner,
+                                    term_width, term_height,
                                     xstrdup("xterm-256color"),
                                     &rettv->vval.v_number);
   if (rettv->vval.v_number <= 0) {
@@ -18066,7 +18076,7 @@ static void f_termopen(typval_T *argvars, typval_T *rettv, FunPtr fptr)
                INTEGER_OBJ(pid), false, false, &err);
   api_clear_error(&err);
 
-  channel_terminal_open(chan);
+  channel_terminal_open(chan, term_curwin);
   channel_create_event(chan, NULL);
 }
 

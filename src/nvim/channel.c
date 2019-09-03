@@ -680,7 +680,7 @@ static void channel_callback_call(Channel *chan, CallbackReader *reader)
 ///
 /// Channel `chan` is assumed to be an open pty channel,
 /// and curbuf is assumed to be a new, unmodified buffer.
-void channel_terminal_open(Channel *chan)
+void channel_terminal_open(Channel *chan, uint8_t term_curwin)
 {
   TerminalOptions topts;
   topts.data = chan;
@@ -689,6 +689,7 @@ void channel_terminal_open(Channel *chan)
   topts.write_cb = term_write;
   topts.resize_cb = term_resize;
   topts.close_cb = term_close;
+  topts.curwin = term_curwin;
   curbuf->b_p_channel = (long)chan->id;  // 'channel' option
   Terminal *term = terminal_open(topts);
   chan->term = term;

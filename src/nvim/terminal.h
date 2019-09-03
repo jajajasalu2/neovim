@@ -15,6 +15,7 @@ typedef void (*terminal_close_cb)(void *data);
 typedef struct {
   void *data;
   uint16_t width, height;
+  uint8_t curwin;
   terminal_write_cb write_cb;
   terminal_resize_cb resize_cb;
   terminal_close_cb close_cb;
